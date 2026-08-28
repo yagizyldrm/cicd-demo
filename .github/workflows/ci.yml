@@ -1,0 +1,61 @@
+# CI Pipeline - GitHub Actions
+# Her push/PR'da UI ve API testlerini otomatik kosar, raporlari saklar.
+name: CI Pipeline
+
+# --- TRIGGER: pipeline ne zaman calissin? ---
+on:
+  push:
+    branches: [ main ]        # main'e her push'ta
+  pull_request:
+    branches: [ main ]        # main'e acilan her PR'da
+  workflow_dispatch:          # Actions sekmesinden elle tetikleme
+
+jobs:
+  # ================= JOB 1: UI (Selenium) testleri =================
+  ui-tests:
+    runs-on: ubuntu-latest    # GitHub'in sagladigi hazir Linux makinesi (Chrome kurulu gelir)
+    steps:
+      - name: Kodu checkout et
+        uses: actions/checkout@v4
+
+      - name: JDK 21 kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven          # Maven bagimliliklarini cache'le => sonraki kosular hizli
+
+      - name: Selenium testlerini kosur
+        run: mvn -B test        # -B = batch (interaktif degil, CI icin)
+
+      - name: Test raporunu artifact olarak yukle
+        if: always()            # test patlasa bile raporu sakla
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-report
+          path: target/surefire-reports/
+
+  # ================= JOB 2: API (Newman) testleri =================
+  api-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodu checkout et
+        uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Newman kur
+        run: npm install -g newman
+
+      - name: API testlerini kosur
+        run: newman run api/demo-collection.postman_collection.json --reporters cli,junit --reporter-junit-export newman-report.xml
+
+      - name: API raporunu artifact olarak yukle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-report
+          path: newman-report.xml

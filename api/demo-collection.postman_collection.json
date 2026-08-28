@@ -1,0 +1,55 @@
+{
+    "info": {
+        "name": "CI Demo API Tests",
+        "description": "Newman ile kosulacak basit API test koleksiyonu. Public test API'si (jsonplaceholder) kullanir.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "GET /todos/1 - tekil kayit dogrulama",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "https://jsonplaceholder.typicode.com/todos/1",
+                    "protocol": "https",
+                    "host": ["jsonplaceholder", "typicode", "com"],
+                    "path": ["todos", "1"]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "// 1) Status kod kontrolu",
+                            "pm.test('Status kodu 200', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "// 2) Sema/alan kontrolu (Swagger kontratina karsi dogrulama mantigi)",
+                            "const body = pm.response.json();",
+                            "pm.test('Beklenen alanlar mevcut', function () {",
+                            "    pm.expect(body).to.have.property('id');",
+                            "    pm.expect(body).to.have.property('userId');",
+                            "    pm.expect(body).to.have.property('title');",
+                            "    pm.expect(body).to.have.property('completed');",
+                            "});",
+                            "",
+                            "// 3) Is kurali kontrolu",
+                            "pm.test('id degeri 1', function () {",
+                            "    pm.expect(body.id).to.eql(1);",
+                            "});",
+                            "",
+                            "// 4) Performans kontrolu (esik gercekci tutulur; cok sikili esik flaky yapar)",
+                            "pm.test('Yanit suresi 5sn altinda', function () {",
+                            "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                            "});"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

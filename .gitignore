@@ -1,0 +1,6 @@
+target/
+node_modules/
+newman-report.xml
+*.log
+.idea/
+.vscode/
