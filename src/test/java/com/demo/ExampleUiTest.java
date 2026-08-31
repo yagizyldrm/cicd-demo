@@ -7,6 +7,10 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 import java.nio.file.Paths;
 
@@ -20,29 +24,39 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ExampleUiTest {
 
     private WebDriver driver;
+    private WebDriverWait wait;
 
     @BeforeEach
     void setUp() {
         ChromeOptions options = new ChromeOptions();
-        // CI runner'inda ekran yok => headless. --no-sandbox / dev-shm Linux runner icin gerekli.
-        options.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage");
+// "headless" ortam degiskeni "false" degilse headless kos (CI icin guvenli varsayilan)
+        if (!"false".equals(System.getenv("HEADLESS"))) {
+            options.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage");
+        }
         driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(5));
     }
 
     /** Sayfa basligini dogrular (pozitif senaryo). */
     @Test
     void pageTitleIsCorrect() {
         driver.get(pageUrl());
+
         assertEquals("CI Demo", driver.getTitle());
     }
 
     /** Butona tiklayinca dogru metnin ciktigini dogrular (etkilesim senaryosu). */
     @Test
-    void clickingButtonShowsResult() {
+    void clickingButtonShowsResult() throws InterruptedException{
+
         driver.get(pageUrl());
+        wait.until(ExpectedConditions.elementToBeClickable(By.id("btn"))).click();
         driver.findElement(By.id("btn")).click();
+        Thread.sleep(1500);
         String result = driver.findElement(By.id("result")).getText();
+        wait.until(ExpectedConditions.textToBe(By.id("result"),"Clicked!"));
         assertEquals("Clicked!", result);
+        Thread.sleep(1500);
     }
 
     private String pageUrl() {
