@@ -50,8 +50,8 @@ class ExampleUiTest {
     void clickingButtonShowsResult() throws InterruptedException{
 
         driver.get(pageUrl());
+        Thread.sleep(1500);
         wait.until(ExpectedConditions.elementToBeClickable(By.id("btn"))).click();
-        driver.findElement(By.id("btn")).click();
         Thread.sleep(1500);
         String result = driver.findElement(By.id("result")).getText();
         wait.until(ExpectedConditions.textToBe(By.id("result"),"Clicked!"));
